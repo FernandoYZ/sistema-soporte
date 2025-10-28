@@ -1,0 +1,8 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Sistema de Control de Reparaciones - Soporte Técnico">
+<title><%= it.title ? it.title + ' - ' : '' %>Control de Reparaciones</title>
+<link rel="stylesheet" href="/public/css/output.css">
+<% if (it.customStyles) { %>
+  <%= it.customStyles %>
+<% } %>
