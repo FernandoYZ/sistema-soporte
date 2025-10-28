@@ -1,11 +1,11 @@
-import { createApp } from "./app";
+import { iniciarApp } from "./app";
 import { ConexionSoporte, ConexionSIGH, cerrarConexiones } from "./config/database";
 
 const HOST = process.env.HOST || "localhost";
-const PORT = parseInt(process.env.PORT || "3010", 10);
+const PORT = parseInt(process.env.PORT || "3000", 10);
 
 async function iniciarServidor() {
-  const app = await createApp();
+  const app = await iniciarApp();
 
   try {
     // Conectar a ambas bases de datos
@@ -15,7 +15,7 @@ async function iniciarServidor() {
     // Iniciar servidor
     await app.listen({ host: HOST, port: PORT });
 
-    app.log.info(`Servidor iniciado en http://${HOST}:${PORT}`);
+    app.log.info(`🚀 Servidor iniciado en http://${HOST}:${PORT}`);
   } catch (error) {
     app.log.error({ error }, "Error al iniciar el servidor");
     process.exit(1);
@@ -24,13 +24,13 @@ async function iniciarServidor() {
 
 // Manejo de cierre graceful
 process.on("SIGINT", async () => {
-  console.log("\nCerrando servidor...");
+  console.log("\n🔌 Cerrando servidor...");
   await cerrarConexiones();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  console.log("\nCerrando servidor...");
+  console.log("\n🔌 Cerrando servidor...");
   await cerrarConexiones();
   process.exit(0);
 });

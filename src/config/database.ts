@@ -39,7 +39,7 @@ export const ConexionSoporte = async (fastify?: any): Promise<ConnectionPool> =>
 
     await pool.connect();
     poolSoporte = pool;
-    fastify?.log?.info("[DB Soporte] Pool iniciado correctamente");
+    fastify?.log?.info(`[DB] ✅ ${process.env.DB_NAME_1 || "Soporte"} iniciado correctamente`);
     return poolSoporte;
   } catch (error) {
     fastify?.log?.error({ error }, "[DB Soporte] Error al iniciar el pool");
@@ -60,7 +60,7 @@ export const ConexionSIGH = async (fastify?: any): Promise<ConnectionPool> => {
 
     await pool.connect();
     poolSIGH = pool;
-    fastify?.log?.info("[DB SIGH] Pool iniciado correctamente");
+    fastify?.log?.info(`[DB] ✅ ${process.env.DB_NAME_2 || "SIGH"} iniciado correctamente`);
     return poolSIGH;
   } catch (error) {
     fastify?.log?.error({ error }, "[DB SIGH] Error al iniciar el pool");
