@@ -7,7 +7,7 @@
     "dev": "bun --watch run src/server.ts",
     "css:dev": "tailwindcss -i ./src/assets/css/input.css -o ./public/css/output.css --watch",
     "css:build": "tailwindcss -i ./src/assets/css/input.css -o ./public/css/output.css --minify",
-    "start": "bun run src/server.ts"
+    "start": "bun run css:build && bun run src/server.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
