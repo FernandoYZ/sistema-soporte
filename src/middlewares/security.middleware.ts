@@ -9,6 +9,7 @@ export async function configurarSeguridad(app: FastifyInstance) {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"], // Permite onclick, onsubmit, etc.
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
