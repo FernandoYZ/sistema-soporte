@@ -1,5 +1,8 @@
--- ========= 1. TABLAS MAESTRAS (CATÁLOGOS) =========
+-- ========= 1. TABLAS MAESTRAS UNIFICADAS (CATÁLOGOS) =========
 
+GO
+
+-- Unificada: Áreas donde se entrega stock Y donde hay equipos.
 CREATE TABLE dbo.Areas (
     IdArea INT IDENTITY(1,1) PRIMARY KEY,
     Nombre VARCHAR(255) NOT NULL UNIQUE,
@@ -8,19 +11,13 @@ CREATE TABLE dbo.Areas (
 );
 GO
 
+-- Unificada: Usuarios que entregan stock Y que atienden soportes.
 CREATE TABLE dbo.Usuarios ( 
-    -- Aprobado: Perfecto para vincular a otra BD sin FK
-    -- y guardar el nombre para evitar JOINS entre servidores.
     IdUsuario INT IDENTITY(1,1) PRIMARY KEY,
     IdEmpleado INT NOT NULL, -- ID de tu otra base de datos
-    NombreCompleto VARCHAR(255) NOT NULL,
+    Nombres VARCHAR(255) NOT NULL,
+	Apellidos Varchar(255) NOT NULL,
     EstaActivo BIT NOT NULL DEFAULT 1
-);
-GO
-
-CREATE TABLE dbo.Categorias (
-    IdCategoria INT IDENTITY(1,1) PRIMARY KEY,
-    Nombre VARCHAR(100) NOT NULL UNIQUE
 );
 GO
 
@@ -30,120 +27,148 @@ CREATE TABLE dbo.Marcas (
 );
 GO
 
+-- Unificada: Incluye categorías de Stock (Toner) y de Equipos (PC).
+CREATE TABLE dbo.Categorias (
+    IdCategoria INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL UNIQUE
+);
+GO
+
+-- Unificada: El CATÁLOGO MAESTRO de todo (modelos de PC, modelos de Toner, etc).
 CREATE TABLE dbo.Productos (
     IdProducto INT IDENTITY(1,1) PRIMARY KEY,
     IdCategoria INT NOT NULL FOREIGN KEY REFERENCES dbo.Categorias(IdCategoria),
     IdMarca INT NOT NULL FOREIGN KEY REFERENCES dbo.Marcas(IdMarca),
     Modelo VARCHAR(200) NOT NULL, 
-    SKU VARCHAR(100) NULL UNIQUE,
+    SKU VARCHAR(100) NULL UNIQUE,   -- Número de Parte
     Descripcion VARCHAR(1000) NULL,
-    CantidadMinima INT NOT NULL DEFAULT 0,
-    -- Aprobado: Esta columna es la clave de la lógica
-    EsSerializado BIT NOT NULL DEFAULT 1 -- 1=Toner, 0=Papel
+    CantidadMinima INT NOT NULL DEFAULT 0, -- Para stock
+    EsSerializado BIT NOT NULL DEFAULT 1 -- 1=Toner/PC, 0=Papel/Mouse
 );
 GO
 
--- Aprobado: Índices correctos en FKs y campos de búsqueda.
-CREATE INDEX IX_Productos_Modelo ON dbo.Productos(Modelo);
-CREATE INDEX IX_Productos_IdCategoria ON dbo.Productos(IdCategoria);
-CREATE INDEX IX_Productos_IdMarca ON dbo.Productos(IdMarca);
+-- ========= 2. TABLAS DE ALMACÉN (CONSUMIBLES Y REPUESTOS) =========
+
 GO
 
--- ========= 2. TABLAS DE STOCK (INVENTARIO) =========
-
--- Aprobado: Excelente normalización de los estados.
 CREATE TABLE dbo.TiposEstadosStock (
 	IdEstadoStock INT IDENTITY(1,1) PRIMARY KEY,
 	Nombre VARCHAR(100) NOT NULL UNIQUE
 );
 GO
-
--- Insertamos los estados básicos
-INSERT INTO dbo.TiposEstadosStock (Nombre) VALUES
-('En Almacén'),
-('Entregado'),
-('En Reparación'),
-('De Baja');
+INSERT INTO dbo.TiposEstadosStock (Nombre) VALUES ('En Almacén'), ('Entregado'), ('En Reparación'), ('De Baja');
 GO
 
-CREATE TABLE dbo.StockItems ( -- Para Tóners (Serializados)
+-- Stock de ítems serializados (Toners, RAMs de repuesto, PCs nuevas en caja)
+CREATE TABLE dbo.StockItems (
     IdItem INT IDENTITY(1,1) PRIMARY KEY,
     IdProducto INT NOT NULL FOREIGN KEY REFERENCES dbo.Productos(IdProducto),
-    Serie VARCHAR(255) NOT NULL,
+    Serie VARCHAR(255) NOT NULL UNIQUE,
     FechaIngreso DATETIME NOT NULL DEFAULT GETDATE(),
-    UbicacionAlmacen VARCHAR(100) NULL DEFAULT 'Data Center',
-    IdEstadoStock INT NOT NULL FOREIGN KEY REFERENCES dbo.TiposEstadosStock(IdEstadoStock),
-    
-    CONSTRAINT UQ_StockItems_Serie UNIQUE (Serie)
+    UbicacionAlmacen VARCHAR(100) NULL DEFAULT 'Almacén TI',
+    IdEstadoStock INT NOT NULL FOREIGN KEY REFERENCES dbo.TiposEstadosStock(IdEstadoStock)
 );
 GO
 
-CREATE INDEX IX_StockItems_IdProducto ON dbo.StockItems(IdProducto);
-CREATE INDEX IX_StockItems_IdEstadoStock ON dbo.StockItems(IdEstadoStock);
-GO
-
-CREATE TABLE dbo.StockCantidad ( -- Para Papel (No Serializados)
-    IdProducto INT PRIMARY KEY,
-    Cantidad INT NOT NULL DEFAULT 0,
-    
-    CONSTRAINT FK_StockCantidad_Producto FOREIGN KEY (IdProducto) 
-    REFERENCES dbo.Productos(IdProducto)
+-- Stock de ítems no serializados (Papel, mouses genéricos)
+CREATE TABLE dbo.StockCantidad (
+    IdProducto INT PRIMARY KEY FOREIGN KEY REFERENCES dbo.Productos(IdProducto),
+    Cantidad INT NOT NULL DEFAULT 0
 );
 GO
 
--- ========= 3. TABLAS TRANSACCIONALES (MOVIMIENTOS) =========
+-- ========= 3. TABLAS DE ACTIVOS (EQUIPOS INSTALADOS) =========
 
+GO
+
+-- Tu tabla de Equipos, pero LIMPIA y conectada a Productos.
+CREATE TABLE dbo.Equipos (
+    IdEquipo INT IDENTITY(1,1) PRIMARY KEY,
+    
+    -- Vínculo al catálogo maestro para saber QUÉ es (Marca, Modelo, Tipo)
+    IdProducto INT NOT NULL FOREIGN KEY REFERENCES dbo.Productos(IdProducto),
+    
+    -- Datos únicos de esta instancia
+    NumeroInventario VARCHAR(50) NOT NULL UNIQUE,
+    NumeroSerie VARCHAR(100) NOT NULL UNIQUE,
+    IdArea INT NOT NULL FOREIGN KEY REFERENCES dbo.Areas(IdArea),
+    Observaciones VARCHAR(1000) NULL,
+    FechaInstalacion DATETIME NULL
+);
+GO
+
+-- ========= 4. TABLAS TRANSACCIONALES (SOPORTES Y ENTREGAS) =========
+
+GO
+
+-- Catálogos para Soportes
+CREATE TABLE dbo.EstadosSoporte (
+    IdEstado INT IDENTITY(1,1) PRIMARY KEY,
+    NombreEstado VARCHAR(50) NOT NULL UNIQUE
+);
+GO
+INSERT INTO dbo.EstadosSoporte (NombreEstado) VALUES ('Abierto'), ('Asignado'), ('En Proceso'), ('Cerrado'), ('Cancelado');
+GO
+
+CREATE TABLE dbo.Prioridades (
+    IdPrioridad INT IDENTITY(1,1) PRIMARY KEY,
+    NombrePrioridad VARCHAR(50) NOT NULL UNIQUE
+);
+GO
+INSERT INTO dbo.Prioridades (NombrePrioridad) VALUES ('Baja'), ('Media'), ('Alta'), ('Urgente');
+GO
+
+-- Tabla de Tickets de Soporte
+CREATE TABLE dbo.Soportes (
+    IdSoporte BIGINT IDENTITY(1,1) PRIMARY KEY,
+    -- El ticket es SOBRE un equipo
+    IdEquipo INT NOT NULL FOREIGN KEY REFERENCES dbo.Equipos(IdEquipo),
+    IdEstado INT NOT NULL FOREIGN KEY REFERENCES dbo.EstadosSoporte(IdEstado),
+    IdPrioridad INT NOT NULL FOREIGN KEY REFERENCES dbo.Prioridades(IdPrioridad),
+    
+    -- Quién reporta y a quién se asigna
+    IdEmpleadoReporta INT NOT NULL, -- ID de la BD de empleados
+    NombreUsuarioReporta VARCHAR(200) NULL,
+    IdUsuarioAsignado INT NULL FOREIGN KEY REFERENCES dbo.Usuarios(IdUsuario),
+    
+    FechaApertura DATETIME NOT NULL DEFAULT GETDATE(),
+    FechaCierre DATETIME NULL,
+    
+    -- Descripción del problema y solución
+    Diagnostico VARCHAR(4000) NULL,
+    SolucionRecomendacion VARCHAR(4000) NULL
+);
+GO
+
+-- Tabla de Entregas de Stock (Consumibles)
 CREATE TABLE dbo.Entregas (
     IdEntrega INT IDENTITY(1,1) PRIMARY KEY,
-    IdUsuario INT NOT NULL, -- Responsable de la Entrega (tu tabla dbo.Usuarios)
-    IdArea INT NOT NULL, -- Área / Servicio de Entrega 
+    IdUsuario INT NOT NULL FOREIGN KEY REFERENCES dbo.Usuarios(IdUsuario), -- Responsable
+    IdArea INT NOT NULL FOREIGN KEY REFERENCES dbo.Areas(IdArea), -- A dónde fue
     FechaEntrega DATETIME NOT NULL DEFAULT GETDATE(), 
     Observacion VARCHAR(1000) NULL,
     
-    CONSTRAINT FK_Entregas_Usuario FOREIGN KEY (IdUsuario) 
-    REFERENCES dbo.Usuarios(IdUsuario),
-    
-    CONSTRAINT FK_Entregas_Area FOREIGN KEY (IdArea) 
-    REFERENCES dbo.Areas(IdArea)
+    -- ¡EL VÍNCULO MÁGICO! Opcional.
+    -- Si esta entrega es por un ticket, se registra aquí.
+    IdSoporte BIGINT NULL FOREIGN KEY REFERENCES dbo.Soportes(IdSoporte)
 );
 GO
 
--- Aprobado: Índices clave para reportes.
-CREATE INDEX IX_Entregas_FechaEntrega ON dbo.Entregas(FechaEntrega);
-CREATE INDEX IX_Entregas_IdUsuario ON dbo.Entregas(IdUsuario);
-CREATE INDEX IX_Entregas_IdArea ON dbo.Entregas(IdArea);
-GO
-
+-- Detalle de lo que se entregó (Toner, Papel, o un repuesto de RAM)
 CREATE TABLE dbo.EntregasDetalle (
     IdEntregaDetalle INT IDENTITY(1,1) PRIMARY KEY, 
-    IdEntrega INT NOT NULL,
-    IdProducto INT NOT NULL,
+    IdEntrega INT NOT NULL FOREIGN KEY REFERENCES dbo.Entregas(IdEntrega),
+    IdProducto INT NOT NULL FOREIGN KEY REFERENCES dbo.Productos(IdProducto),
     
-    -- Si es serializado (Toner), se guarda el ID del ítem específico
-    IdItem INT NULL, 
+    -- Si es serializado (Toner, RAM)
+    IdItem INT NULL FOREIGN KEY REFERENCES dbo.StockItems(IdItem), 
     
-    -- Cantidad (Para Tóner será 1, para Papel será N)
+    -- Cantidad (Para Tóner/RAM será 1, para Papel será N)
     CantidadEntregada INT NOT NULL,
     
-    CONSTRAINT FK_EntregasDetalle_Entrega FOREIGN KEY (IdEntrega) 
-    REFERENCES dbo.Entregas(IdEntrega),
-    
-    CONSTRAINT FK_EntregasDetalle_Producto FOREIGN KEY (IdProducto) 
-    REFERENCES dbo.Productos(IdProducto),
-    
-    CONSTRAINT FK_EntregasDetalle_Item FOREIGN KEY (IdItem) 
-    REFERENCES dbo.StockItems(IdItem),
-    
-    -- Aprobado: Esta es la mejor parte de tu script.
-    -- Lógica de negocio a nivel de base de datos.
     CONSTRAINT CHK_EntregaDetalle_Tipo CHECK (
-        (IdItem IS NOT NULL AND CantidadEntregada = 1) OR -- Caso Toner
-        (IdItem IS NULL AND CantidadEntregada >= 1 AND IdItem IS NULL) -- Caso Papel
+        (IdItem IS NOT NULL AND CantidadEntregada = 1) OR -- Caso Serializado
+        (IdItem IS NULL AND CantidadEntregada >= 1)      -- Caso No Serializado
     )
 );
-GO
-
-CREATE INDEX IX_EntregasDetalle_IdEntrega ON dbo.EntregasDetalle(IdEntrega);
-CREATE INDEX IX_EntregasDetalle_IdProducto ON dbo.EntregasDetalle(IdProducto);
-CREATE INDEX IX_EntregasDetalle_IdItem ON dbo.EntregasDetalle(IdItem);
 GO
