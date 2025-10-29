@@ -1,0 +1,319 @@
+<% layout("../layouts/main") %>
+
+<div class="min-h-screen bg-dark-bg">
+  <!-- Container Principal -->
+  <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+    <!-- Header con Título y Subtítulo -->
+    <div class="mb-8 animate-[fadeIn_0.5s_ease-out]">
+      <h1 class="text-4xl font-bold text-gradient mb-2">Sistema de Inventario</h1>
+      <p class="text-dark-text-secondary text-lg">Gestión inteligente de toners y entregas</p>
+    </div>
+
+    <!-- Cards de Estadísticas - One UI Style -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+      <!-- Card: Stock Disponible -->
+      <div class="stats-card rounded-3xl p-6 hover-lift transition-smooth card-shine">
+        <div class="flex items-start justify-between mb-4">
+          <div class="p-3 bg-blue-500/10 rounded-2xl">
+            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+          </div>
+          <span class="text-xs font-semibold text-dark-text-secondary bg-dark-hover px-3 py-1 rounded-full">Stock</span>
+        </div>
+        <div>
+          <p class="text-4xl font-bold text-dark-text mb-1" id="stats-stock">0</p>
+          <p class="text-sm text-dark-text-secondary">Items disponibles</p>
+        </div>
+      </div>
+
+      <!-- Card: Entregas Hoy -->
+      <div class="stats-card rounded-3xl p-6 hover-lift transition-smooth card-shine">
+        <div class="flex items-start justify-between mb-4">
+          <div class="p-3 bg-green-500/10 rounded-2xl">
+            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+          </div>
+          <span class="text-xs font-semibold text-dark-text-secondary bg-dark-hover px-3 py-1 rounded-full">Hoy</span>
+        </div>
+        <div>
+          <p class="text-4xl font-bold text-dark-text mb-1" id="stats-entregas">0</p>
+          <p class="text-sm text-dark-text-secondary">Entregas realizadas</p>
+        </div>
+      </div>
+
+      <!-- Card: Productos -->
+      <div class="stats-card rounded-3xl p-6 hover-lift transition-smooth card-shine">
+        <div class="flex items-start justify-between mb-4">
+          <div class="p-3 bg-purple-500/10 rounded-2xl">
+            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <span class="text-xs font-semibold text-dark-text-secondary bg-dark-hover px-3 py-1 rounded-full">Catálogo</span>
+        </div>
+        <div>
+          <p class="text-4xl font-bold text-dark-text mb-1" id="stats-productos">0</p>
+          <p class="text-sm text-dark-text-secondary">Productos registrados</p>
+        </div>
+      </div>
+
+      <!-- Card: Áreas -->
+      <div class="stats-card rounded-3xl p-6 hover-lift transition-smooth card-shine">
+        <div class="flex items-start justify-between mb-4">
+          <div class="p-3 bg-orange-500/10 rounded-2xl">
+            <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <span class="text-xs font-semibold text-dark-text-secondary bg-dark-hover px-3 py-1 rounded-full">Áreas</span>
+        </div>
+        <div>
+          <p class="text-4xl font-bold text-dark-text mb-1" id="stats-areas">0</p>
+          <p class="text-sm text-dark-text-secondary">Servicios activos</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Contenedor de Tabs y Contenido -->
+    <div class="glass-strong rounded-3xl overflow-hidden shadow-dark-lg animate-[slideUp_0.5s_ease-out]">
+
+      <!-- Tabs Navigation - One UI Style -->
+      <div class="border-b border-dark-border bg-dark-surface/50">
+        <nav class="flex overflow-x-auto px-2" id="tabs-nav">
+          <button onclick="cambiarTab('entregas')" data-tab="entregas"
+            class="tab-button tab-active relative px-6 py-4 text-sm font-semibold text-blue-400 transition-smooth whitespace-nowrap flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span>Entregas</span>
+          </button>
+
+          <button onclick="cambiarTab('stock')" data-tab="stock"
+            class="tab-button relative px-6 py-4 text-sm font-semibold text-dark-text-secondary hover:text-dark-text transition-smooth whitespace-nowrap flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <span>Stock</span>
+          </button>
+
+          <button onclick="cambiarTab('productos')" data-tab="productos"
+            class="tab-button relative px-6 py-4 text-sm font-semibold text-dark-text-secondary hover:text-dark-text transition-smooth whitespace-nowrap flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span>Productos</span>
+          </button>
+
+          <button onclick="cambiarTab('catalogos')" data-tab="catalogos"
+            class="tab-button relative px-6 py-4 text-sm font-semibold text-dark-text-secondary hover:text-dark-text transition-smooth whitespace-nowrap flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+            <span>Catálogos</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+
+        <!-- Tab: Entregas -->
+        <div id="tab-entregas" class="tab-content">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Registro de Entregas</h3>
+              <p class="text-sm text-dark-text-secondary">Gestiona las entregas de toners y materiales</p>
+            </div>
+            <button onclick="abrirModalEntrega()" class="btn-glow bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth shadow-blue-glow hover:shadow-blue-glow-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Nueva Entrega</span>
+            </button>
+          </div>
+
+          <!-- Filtros -->
+          <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <input type="date" id="filtro-fecha"
+              class="px-4 py-3 bg-dark-elevated border border-dark-border rounded-xl text-dark-text text-sm focus:border-blue-500 transition-smooth"
+              onchange="filtrarEntregas()">
+            <input type="text" id="filtro-buscar"
+              placeholder="Buscar por serie, área o responsable..."
+              class="flex-1 px-4 py-3 bg-dark-elevated border border-dark-border rounded-xl text-dark-text text-sm placeholder-dark-text-secondary focus:border-blue-500 transition-smooth"
+              oninput="filtrarEntregas()">
+            <button onclick="limpiarFiltros()"
+              class="px-4 py-3 bg-dark-elevated border border-dark-border hover:bg-dark-hover rounded-xl text-dark-text-secondary hover:text-dark-text text-sm font-medium transition-smooth">
+              Limpiar
+            </button>
+          </div>
+
+          <!-- Tabla -->
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Fecha/Hora</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Serie</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Responsable</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Área</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Observación</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-entregas" class="divide-y divide-dark-border">
+                  <!-- Contenido dinámico -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Stock -->
+        <div id="tab-stock" class="tab-content hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Inventario de Stock</h3>
+              <p class="text-sm text-dark-text-secondary">Items serializados en almacén</p>
+            </div>
+            <button onclick="abrirModalStock()" class="btn-glow bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Ingresar Item</span>
+            </button>
+          </div>
+
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Serie</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Ubicación</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Fecha Ingreso</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-stock" class="divide-y divide-dark-border">
+                  <!-- Contenido dinámico -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Productos -->
+        <div id="tab-productos" class="tab-content hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Catálogo de Productos</h3>
+              <p class="text-sm text-dark-text-secondary">Gestiona los productos del inventario</p>
+            </div>
+            <button onclick="abrirModalProducto()" class="btn-glow bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Nuevo Producto</span>
+            </button>
+          </div>
+
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Modelo</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Marca</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Categoría</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">SKU</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Tipo</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-productos" class="divide-y divide-dark-border">
+                  <!-- Contenido dinámico -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Catálogos -->
+        <div id="tab-catalogos" class="tab-content hidden">
+          <h3 class="text-2xl font-bold text-dark-text mb-6">Gestión de Catálogos</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Áreas -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Áreas</h4>
+                <button onclick="abrirModalArea()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <div id="lista-areas" class="space-y-2 max-h-96 overflow-y-auto">
+                <!-- Contenido dinámico -->
+              </div>
+            </div>
+
+            <!-- Categorías -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Categorías</h4>
+                <button onclick="abrirModalCategoria()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <div id="lista-categorias" class="space-y-2 max-h-96 overflow-y-auto">
+                <!-- Contenido dinámico -->
+              </div>
+            </div>
+
+            <!-- Marcas -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Marcas</h4>
+                <button onclick="abrirModalMarca()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <div id="lista-marcas" class="space-y-2 max-h-96 overflow-y-auto">
+                <!-- Contenido dinámico -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Incluir modales -->
+<%~ include("../components/modales/modal-entrega") %>
+<%~ include("../components/modales/modal-stock") %>
+<%~ include("../components/modales/modal-producto") %>
+<%~ include("../components/modales/modal-catalogos") %>
+
+<!-- JavaScript principal -->
+<script src="/js/dashboard.js"></script>
+<script src="/js/dashboard-helpers.js"></script>
