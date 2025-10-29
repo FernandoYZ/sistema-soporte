@@ -1,79 +1,50 @@
 import NodeCache from "node-cache";
 import { randomUUID } from "crypto";
+import type { Sesion } from "../types/sesiones.type";
 
 // Cache para almacenar sesiones en memoria
 // TTL de 1 hora (3600 segundos)
 // checkperiod cada 10 minutos (600 segundos)
-const cacheSession = new NodeCache({
+const cacheSesion = new NodeCache({
   stdTTL: 3600,
   checkperiod: 600,
 });
 
-export interface SessionData {
-  userId: number;
-  username: string;
-  createdAt: number;
-  lastActivity: number;
-}
-
-/**
- * Crea una nueva sesión
- * @param userId ID del usuario
- * @param username Nombre de usuario
- * @returns Token de sesión (UUID)
- */
-export const crearSesion = (userId: number, username: string): string => {
-  const sessionToken = randomUUID();
-  const sessionData: SessionData = {
-    userId,
-    username,
-    createdAt: Date.now(),
-    lastActivity: Date.now(),
+export const crearSesion = (idUsuario: number, usuario: string): string => {
+  const sesionToken = randomUUID();
+  const sesion: Sesion = {
+    idUsuario,
+    usuario,
+    creadoEn: Date.now(),
+    ultimaActividad: Date.now(),
+    expiraEn: Date.now() + 3600000, // 1 hora
   };
 
-  cacheSession.set(sessionToken, sessionData);
-  return sessionToken;
+  cacheSesion.set(sesionToken, sesion);
+  return sesionToken;
 };
 
-/**
- * Obtiene los datos de una sesión
- * @param sessionToken Token de sesión
- * @returns Datos de sesión o null si no existe
- */
-export const obtenerSesion = (sessionToken: string): SessionData | null => {
-  const session = cacheSession.get<SessionData>(sessionToken);
+export const obtenerSesion = (sesionToken: string): Sesion | null => {
+  const sesion = cacheSesion.get<Sesion>(sesionToken);
 
-  if (session) {
+  if (sesion) {
     // Actualizar última actividad
-    session.lastActivity = Date.now();
-    cacheSession.set(sessionToken, session);
-    return session;
+    sesion.ultimaActividad = Date.now();
+    cacheSesion.set(sesionToken, sesion);
+    return sesion;
   }
 
   return null;
 };
 
-/**
- * Elimina una sesión
- * @param sessionToken Token de sesión
- */
-export const eliminarSesion = (sessionToken: string): void => {
-  cacheSession.del(sessionToken);
+export const eliminarSesion = (sesionToken: string): void => {
+  cacheSesion.del(sesionToken);
 };
 
-/**
- * Verifica si una sesión existe y es válida
- * @param sessionToken Token de sesión
- * @returns true si existe, false si no
- */
-export const validarSesion = (sessionToken: string): boolean => {
-  return cacheSession.has(sessionToken);
+export const validarSesion = (sesionToken: string): boolean => {
+  return cacheSesion.has(sesionToken);
 };
 
-/**
- * Obtiene el número total de sesiones activas
- * @returns Número de sesiones
- */
 export const contarSesiones = (): number => {
-  return cacheSession.keys().length;
+  return cacheSesion.keys().length;
 };
