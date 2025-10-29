@@ -1,23 +1,45 @@
 import { iniciarApp } from "./app";
 import { ConexionSoporte, ConexionSIGH, cerrarConexiones } from "./config/database";
+import { iniciarReporteMetricas } from "./middlewares/metrics.middleware";
 
 const HOST = process.env.HOST || "localhost";
 const PORT = parseInt(process.env.PORT || "3000", 10);
+const ENTORNO = process.env.NODE_ENV || "development";
 
 async function iniciarServidor() {
-  const app = await iniciarApp();
-
   try {
+    console.log("\n" + "=".repeat(60));
+    console.log("⚙️  INICIANDO SISTEMA DE SOPORTE REZOLA");
+    console.log("=".repeat(60));
+
     // Conectar a ambas bases de datos
-    await ConexionSoporte(app);
-    await ConexionSIGH(app);
+    await ConexionSoporte();
+    await ConexionSIGH();
+
+    // Iniciar aplicación
+    const app = iniciarApp();
+
+    // Iniciar sistema de métricas
+    iniciarReporteMetricas();
 
     // Iniciar servidor
-    await app.listen({ host: HOST, port: PORT });
-
-    app.log.info(`🚀 Servidor iniciado en http://${HOST}:${PORT}`);
+    app.listen({
+      hostname: HOST,
+      port: PORT
+    }, 
+      () => {
+      console.log("\n" + "=".repeat(60));
+      console.log("🚀 SERVIDOR INICIADO CORRECTAMENTE");
+      console.log("=".repeat(60));
+      console.log(` • URL:        http://${HOST}:${PORT}`);
+      console.log(` • Entorno:    ${ENTORNO}`);
+      console.log(` • Runtime:    Bun ${Bun.version}`);
+      console.log(` • Framework:  ElysiaJS`);
+      console.log("=".repeat(60) + "\n");
+      console.log("💡 Presiona Ctrl+C para detener el servidor\n");
+    });
   } catch (error) {
-    app.log.error({ error }, "Error al iniciar el servidor");
+    console.error("\n❌ Error al iniciar el servidor:", error);
     process.exit(1);
   }
 }

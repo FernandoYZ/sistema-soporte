@@ -1,5 +1,5 @@
 // src/routes/areas.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarAreas,
   obtenerArea,
@@ -7,19 +7,20 @@ import {
   actualizarArea,
   eliminarArea,
 } from "../controllers/areas.controller";
+import { renderVista } from "../utils/render";
 
-export async function areasRoutes(app: FastifyInstance) {
+export const areasRoutes = new Elysia()
   // API Routes
-  app.get("/api/areas", listarAreas);
-  app.get("/api/areas/:id", obtenerArea);
-  app.post("/api/areas", crearArea);
-  app.put("/api/areas/:id", actualizarArea);
-  app.delete("/api/areas/:id", eliminarArea);
+  .get("/api/areas", listarAreas)
+  .get("/api/areas/:id", obtenerArea)
+  .post("/api/areas", crearArea)
+  .put("/api/areas/:id", actualizarArea)
+  .delete("/api/areas/:id", eliminarArea)
 
   // View Routes
-  app.get("/areas", async (_req, reply) => {
-    return (reply as any).view("pages/areas", {
+  .get("/areas", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/areas", {
       title: "Gestión de Áreas",
     });
   });
-}

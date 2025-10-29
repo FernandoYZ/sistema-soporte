@@ -1,5 +1,4 @@
 // src/controllers/stock.controller.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
 import { ConexionSoporte } from "../config/database";
 import type { StockItem, StockItemConRelaciones, CrearStockItem, StockCantidad } from "../types/entidades.type";
 import sql from "mssql";
@@ -7,9 +6,9 @@ import sql from "mssql";
 // ========= STOCK ITEMS (SERIALIZADOS) =========
 
 // Listar todos los items de stock (con relaciones)
-export async function listarStockItems(req: FastifyRequest, reply: FastifyReply) {
+export async function listarStockItems({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query<StockItemConRelaciones>(
@@ -23,27 +22,26 @@ export async function listarStockItems(req: FastifyRequest, reply: FastifyReply)
          ORDER BY si.FechaIngreso DESC`
       );
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar stock items");
-    return reply.status(500).send({
+    console.error("Error al listar stock items:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener los items de stock",
-    });
+    };
   }
 }
 
 // Obtener un item de stock por ID
-export async function obtenerStockItem(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function obtenerStockItem({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -60,43 +58,44 @@ export async function obtenerStockItem(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Item de stock no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al obtener stock item");
-    return reply.status(500).send({
+    console.error("Error al obtener stock item:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener el item de stock",
-    });
+    };
   }
 }
 
 // Crear un item de stock nuevo (ingreso de inventario serializado)
-export async function crearStockItem(
-  req: FastifyRequest<{ Body: CrearStockItem }>,
-  reply: FastifyReply
-) {
+export async function crearStockItem({ body, set }: { body: CrearStockItem; set: any }) {
   try {
-    const { IdProducto, Serie, UbicacionAlmacen, IdEstadoStock } = req.body;
+    const { IdProducto, Serie, UbicacionAlmacen, IdEstadoStock } = body;
 
     // Validaciones
     if (!IdProducto || !Serie || Serie.trim() === "" || !IdEstadoStock) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El producto, serie y estado son obligatorios",
-      });
+      };
     }
 
     // Verificar que el producto sea serializado
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const producto = await pool
       .request()
@@ -104,17 +103,19 @@ export async function crearStockItem(
       .query("SELECT EsSerializado FROM dbo.Productos WHERE IdProducto = @IdProducto");
 
     if (producto.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "El producto especificado no existe",
-      });
+      };
     }
 
     if (!producto.recordset[0].EsSerializado) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "Este producto no es serializado. Use la gestión de stock por cantidad.",
-      });
+      };
     }
 
     const resultado = await pool
@@ -130,45 +131,54 @@ export async function crearStockItem(
          VALUES (@IdProducto, @Serie, @UbicacionAlmacen, @IdEstadoStock)`
       );
 
-    return reply.status(201).send({
+    set.status = 201;
+    return {
       exito: true,
       mensaje: "Item de stock creado exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al crear stock item");
+    console.error("Error al crear stock item:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un item con ese número de serie",
-      });
+      };
     }
 
     if (error.number === 547) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El producto o estado especificado no existe",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al crear el item de stock",
-    });
+    };
   }
 }
 
 // Actualizar un item de stock
-export async function actualizarStockItem(
-  req: FastifyRequest<{ Params: { id: string }; Body: Partial<CrearStockItem> }>,
-  reply: FastifyReply
-) {
+export async function actualizarStockItem({
+  params,
+  body,
+  set,
+}: {
+  params: { id: string };
+  body: Partial<CrearStockItem>;
+  set: any;
+}) {
   try {
-    const { id } = req.params;
-    const { Serie, UbicacionAlmacen, IdEstadoStock } = req.body;
+    const { id } = params;
+    const { Serie, UbicacionAlmacen, IdEstadoStock } = body;
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -186,42 +196,43 @@ export async function actualizarStockItem(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Item de stock no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Item de stock actualizado exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al actualizar stock item");
+    console.error("Error al actualizar stock item:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un item con ese número de serie",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al actualizar el item de stock",
-    });
+    };
   }
 }
 
 // Eliminar un item de stock
-export async function eliminarStockItem(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function eliminarStockItem({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -229,39 +240,43 @@ export async function eliminarStockItem(
       .query("DELETE FROM dbo.StockItems WHERE IdItem = @IdItem");
 
     if (resultado.rowsAffected[0] === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Item de stock no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Item de stock eliminado exitosamente",
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al eliminar stock item");
+    console.error("Error al eliminar stock item:", error);
 
     if (error.number === 547) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "No se puede eliminar el item porque está siendo utilizado en entregas",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al eliminar el item de stock",
-    });
+    };
   }
 }
 
 // ========= STOCK CANTIDAD (NO SERIALIZADOS) =========
 
 // Listar todo el stock por cantidad
-export async function listarStockCantidad(req: FastifyRequest, reply: FastifyReply) {
+export async function listarStockCantidad({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query(
@@ -277,36 +292,44 @@ export async function listarStockCantidad(req: FastifyRequest, reply: FastifyRep
          ORDER BY p.Modelo`
       );
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar stock cantidad");
-    return reply.status(500).send({
+    console.error("Error al listar stock cantidad:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener el stock por cantidad",
-    });
+    };
   }
 }
 
 // Actualizar cantidad de stock (incrementar o decrementar)
-export async function actualizarStockCantidad(
-  req: FastifyRequest<{ Params: { id: string }; Body: { Cantidad: number; Operacion: 'incrementar' | 'decrementar' | 'establecer' } }>,
-  reply: FastifyReply
-) {
+export async function actualizarStockCantidad({
+  params,
+  body,
+  set,
+}: {
+  params: { id: string };
+  body: { Cantidad: number; Operacion: 'incrementar' | 'decrementar' | 'establecer' };
+  set: any;
+}) {
   try {
-    const { id } = req.params;
-    const { Cantidad, Operacion } = req.body;
+    const { id } = params;
+    const { Cantidad, Operacion } = body;
 
     if (!Cantidad || Cantidad <= 0) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "La cantidad debe ser mayor a cero",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     let query = "";
     if (Operacion === "incrementar") {
@@ -324,22 +347,25 @@ export async function actualizarStockCantidad(
       .query<StockCantidad>(query);
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Registro de stock no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Stock actualizado exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al actualizar stock cantidad");
-    return reply.status(500).send({
+    console.error("Error al actualizar stock cantidad:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al actualizar el stock",
-    });
+    };
   }
 }

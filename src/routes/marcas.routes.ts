@@ -1,5 +1,5 @@
 // src/routes/marcas.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarMarcas,
   obtenerMarca,
@@ -7,19 +7,20 @@ import {
   actualizarMarca,
   eliminarMarca,
 } from "../controllers/marcas.controller";
+import { renderVista } from "../utils/render";
 
-export async function marcasRoutes(app: FastifyInstance) {
+export const marcasRoutes = new Elysia()
   // API Routes
-  app.get("/api/marcas", listarMarcas);
-  app.get("/api/marcas/:id", obtenerMarca);
-  app.post("/api/marcas", crearMarca);
-  app.put("/api/marcas/:id", actualizarMarca);
-  app.delete("/api/marcas/:id", eliminarMarca);
+  .get("/api/marcas", listarMarcas)
+  .get("/api/marcas/:id", obtenerMarca)
+  .post("/api/marcas", crearMarca)
+  .put("/api/marcas/:id", actualizarMarca)
+  .delete("/api/marcas/:id", eliminarMarca)
 
   // View Routes
-  app.get("/marcas", async (_req, reply) => {
-    return (reply as any).view("pages/marcas", {
+  .get("/marcas", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/marcas", {
       title: "Gestión de Marcas",
     });
   });
-}

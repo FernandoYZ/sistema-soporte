@@ -1,34 +1,28 @@
 // src/app.ts
-import Fastify from "fastify";
+import { Elysia } from "elysia";
 import { configurarCookies } from "./middlewares/cookie.middleware";
 import { configurarSeguridad } from "./middlewares/security.middleware";
 import { configurarPublic } from "./middlewares/public.middleware";
-import { configurarPlantilla } from "./middlewares/plantilla.plugin";
+import { middlewareMetricas } from "./middlewares/metrics.middleware";
 import { configurarRutas } from "./middlewares/routes.middleware";
-import { errorHandler, noEncontradoHandler } from "./handlers/error.handler";
+import { errorHandler } from "./handlers/error.handler";
 
-export async function iniciarApp() {
-  const app = Fastify({
-    logger: {
-      level: process.env.NODE_ENV === "production" ? "info" : "debug",
-      transport: {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "HH:MM:ss",
-          ignore: "pid,hostname",
-        },
-      }
-    }
-  });
+export function iniciarApp() {
+  const app = new Elysia();
 
-  await configurarCookies(app);
-  await configurarSeguridad(app);
-  await configurarPublic(app);
-  await configurarPlantilla(app)
+  // Configurar plugins y middlewares
+  app
+    .use(middlewareMetricas)
+    .use(configurarCookies)
+    .use(configurarSeguridad);
 
+  // Configurar rutas ANTES del plugin de archivos estáticos
   configurarRutas(app);
-  noEncontradoHandler(app);
+
+  // Configurar archivos estáticos DESPUÉS de las rutas
+  app.use(configurarPublic);
+
+  // Configurar manejo de errores
   errorHandler(app);
 
   return app;

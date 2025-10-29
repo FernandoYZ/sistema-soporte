@@ -1,5 +1,5 @@
 // src/routes/categorias.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarCategorias,
   obtenerCategoria,
@@ -7,19 +7,20 @@ import {
   actualizarCategoria,
   eliminarCategoria,
 } from "../controllers/categorias.controller";
+import { renderVista } from "../utils/render";
 
-export async function categoriasRoutes(app: FastifyInstance) {
+export const categoriasRoutes = new Elysia()
   // API Routes
-  app.get("/api/categorias", listarCategorias);
-  app.get("/api/categorias/:id", obtenerCategoria);
-  app.post("/api/categorias", crearCategoria);
-  app.put("/api/categorias/:id", actualizarCategoria);
-  app.delete("/api/categorias/:id", eliminarCategoria);
+  .get("/api/categorias", listarCategorias)
+  .get("/api/categorias/:id", obtenerCategoria)
+  .post("/api/categorias", crearCategoria)
+  .put("/api/categorias/:id", actualizarCategoria)
+  .delete("/api/categorias/:id", eliminarCategoria)
 
   // View Routes
-  app.get("/categorias", async (_req, reply) => {
-    return (reply as any).view("pages/categorias", {
+  .get("/categorias", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/categorias", {
       title: "Gestión de Categorías",
     });
   });
-}

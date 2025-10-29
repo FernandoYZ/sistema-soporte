@@ -1,5 +1,5 @@
 // src/routes/stock.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarStockItems,
   obtenerStockItem,
@@ -9,29 +9,31 @@ import {
   listarStockCantidad,
   actualizarStockCantidad,
 } from "../controllers/stock.controller";
+import { renderVista } from "../utils/render";
 
-export async function stockRoutes(app: FastifyInstance) {
+export const stockRoutes = new Elysia()
   // API Routes - Stock Items (Serializados)
-  app.get("/api/stock/items", listarStockItems);
-  app.get("/api/stock/items/:id", obtenerStockItem);
-  app.post("/api/stock/items", crearStockItem);
-  app.put("/api/stock/items/:id", actualizarStockItem);
-  app.delete("/api/stock/items/:id", eliminarStockItem);
+  .get("/api/stock/items", listarStockItems)
+  .get("/api/stock/items/:id", obtenerStockItem)
+  .post("/api/stock/items", crearStockItem)
+  .put("/api/stock/items/:id", actualizarStockItem)
+  .delete("/api/stock/items/:id", eliminarStockItem)
 
   // API Routes - Stock Cantidad (No Serializados)
-  app.get("/api/stock/cantidad", listarStockCantidad);
-  app.put("/api/stock/cantidad/:id", actualizarStockCantidad);
+  .get("/api/stock/cantidad", listarStockCantidad)
+  .put("/api/stock/cantidad/:id", actualizarStockCantidad)
 
   // View Routes
-  app.get("/stock/items", async (_req, reply) => {
-    return (reply as any).view("pages/stock-items", {
+  .get("/stock/items", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/stock-items", {
       title: "Inventario de Items Serializados",
     });
-  });
+  })
 
-  app.get("/stock/cantidad", async (_req, reply) => {
-    return (reply as any).view("pages/stock-cantidad", {
+  .get("/stock/cantidad", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/stock-cantidad", {
       title: "Inventario por Cantidad",
     });
   });
-}

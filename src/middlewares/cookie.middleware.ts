@@ -1,13 +1,13 @@
-import fastifyCookie from "@fastify/cookie";
-import type { FastifyInstance } from "fastify";
+import { cookie } from "@elysiajs/cookie";
+import type { Elysia } from "elysia";
 
-export async function configurarCookies(app: FastifyInstance) {
-  await app.register(fastifyCookie, {
-    secret: process.env.COOKIE_SECRET || "mi_clave_segura",
-    parseOptions: {
+export const configurarCookies = (app: Elysia) => {
+  return app.use(
+    cookie({
+      secret: process.env.COOKIE_SECRET || "mi_clave_segura",
       httpOnly: true,
       sameSite: "strict",
       path: "/",
-    },
-  });
-}
+    })
+  );
+};

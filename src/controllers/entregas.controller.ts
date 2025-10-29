@@ -1,5 +1,4 @@
 // src/controllers/entregas.controller.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
 import { ConexionSoporte } from "../config/database";
 import type {
   Entrega,
@@ -10,9 +9,9 @@ import type {
 import sql from "mssql";
 
 // Listar todas las entregas (con relaciones)
-export async function listarEntregas(req: FastifyRequest, reply: FastifyReply) {
+export async function listarEntregas({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query<EntregaConRelaciones>(
@@ -26,27 +25,26 @@ export async function listarEntregas(req: FastifyRequest, reply: FastifyReply) {
          ORDER BY e.FechaEntrega DESC`
       );
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar entregas");
-    return reply.status(500).send({
+    console.error("Error al listar entregas:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener las entregas",
-    });
+    };
   }
 }
 
 // Obtener una entrega por ID (con detalles)
-export async function obtenerEntrega(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function obtenerEntrega({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     // Obtener la entrega principal
     const entregaResult = await pool
@@ -64,10 +62,11 @@ export async function obtenerEntrega(
       );
 
     if (entregaResult.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Entrega no encontrada",
-      });
+      };
     }
 
     // Obtener los detalles de la entrega
@@ -88,46 +87,47 @@ export async function obtenerEntrega(
     const entrega = entregaResult.recordset[0];
     const detalles = detallesResult.recordset;
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: {
         ...entrega,
         Detalles: detalles,
       },
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al obtener entrega");
-    return reply.status(500).send({
+    console.error("Error al obtener entrega:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener la entrega",
-    });
+    };
   }
 }
 
 // Crear una entrega nueva (con transacción)
-export async function crearEntrega(
-  req: FastifyRequest<{ Body: CrearEntrega }>,
-  reply: FastifyReply
-) {
+export async function crearEntrega({ body, set }: { body: CrearEntrega; set: any }) {
   try {
-    const { IdUsuario, IdArea, Observacion, IdSoporte, Detalles } = req.body;
+    const { IdUsuario, IdArea, Observacion, IdSoporte, Detalles } = body;
 
     // Validaciones
     if (!IdUsuario || !IdArea) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El usuario y área son obligatorios",
-      });
+      };
     }
 
     if (!Detalles || Detalles.length === 0) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "Debe incluir al menos un producto en la entrega",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const transaction = pool.transaction();
 
     try {
@@ -222,33 +222,32 @@ export async function crearEntrega(
 
       await transaction.commit();
 
-      return reply.status(201).send({
+      set.status = 201;
+      return {
         exito: true,
         mensaje: "Entrega registrada exitosamente",
         datos: { IdEntrega: idEntrega },
-      });
+      };
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
   } catch (error: any) {
-    req.log.error({ error }, "Error al crear entrega");
+    console.error("Error al crear entrega:", error);
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: error.message || "Error al crear la entrega",
-    });
+    };
   }
 }
 
 // Eliminar una entrega (con rollback de stock)
-export async function eliminarEntrega(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function eliminarEntrega({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
     const transaction = pool.transaction();
 
     try {
@@ -311,20 +310,22 @@ export async function eliminarEntrega(
 
       await transaction.commit();
 
-      return reply.status(200).send({
+      set.status = 200;
+      return {
         exito: true,
         mensaje: "Entrega eliminada exitosamente",
-      });
+      };
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
   } catch (error: any) {
-    req.log.error({ error }, "Error al eliminar entrega");
+    console.error("Error al eliminar entrega:", error);
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: error.message || "Error al eliminar la entrega",
-    });
+    };
   }
 }

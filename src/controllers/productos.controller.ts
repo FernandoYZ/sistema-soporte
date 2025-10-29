@@ -1,13 +1,12 @@
 // src/controllers/productos.controller.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
 import { ConexionSoporte } from "../config/database";
 import type { Producto, ProductoConRelaciones, CrearProducto } from "../types/entidades.type";
 import sql from "mssql";
 
 // Listar todos los productos (con relaciones)
-export async function listarProductos(req: FastifyRequest, reply: FastifyReply) {
+export async function listarProductos({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query<ProductoConRelaciones>(
@@ -21,27 +20,26 @@ export async function listarProductos(req: FastifyRequest, reply: FastifyReply) 
          ORDER BY p.Modelo`
       );
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar productos");
-    return reply.status(500).send({
+    console.error("Error al listar productos:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener los productos",
-    });
+    };
   }
 }
 
 // Obtener un producto por ID (con relaciones)
-export async function obtenerProducto(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function obtenerProducto({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -58,30 +56,30 @@ export async function obtenerProducto(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Producto no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al obtener producto");
-    return reply.status(500).send({
+    console.error("Error al obtener producto:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener el producto",
-    });
+    };
   }
 }
 
 // Crear un producto nuevo
-export async function crearProducto(
-  req: FastifyRequest<{ Body: CrearProducto }>,
-  reply: FastifyReply
-) {
+export async function crearProducto({ body, set }: { body: CrearProducto; set: any }) {
   try {
     const {
       IdCategoria,
@@ -91,24 +89,26 @@ export async function crearProducto(
       Descripcion,
       CantidadMinima,
       EsSerializado,
-    } = req.body;
+    } = body;
 
     // Validaciones
     if (!IdCategoria || !IdMarca || !Modelo || Modelo.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "La categoría, marca y modelo son obligatorios",
-      });
+      };
     }
 
     if (EsSerializado === undefined) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "Debe especificar si el producto es serializado o no",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -137,42 +137,51 @@ export async function crearProducto(
         );
     }
 
-    return reply.status(201).send({
+    set.status = 201;
+    return {
       exito: true,
       mensaje: "Producto creado exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al crear producto");
+    console.error("Error al crear producto:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un producto con ese SKU",
-      });
+      };
     }
 
     if (error.number === 547) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "La categoría o marca especificada no existe",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al crear el producto",
-    });
+    };
   }
 }
 
 // Actualizar un producto existente
-export async function actualizarProducto(
-  req: FastifyRequest<{ Params: { id: string }; Body: CrearProducto }>,
-  reply: FastifyReply
-) {
+export async function actualizarProducto({
+  params,
+  body,
+  set,
+}: {
+  params: { id: string };
+  body: CrearProducto;
+  set: any;
+}) {
   try {
-    const { id } = req.params;
+    const { id } = params;
     const {
       IdCategoria,
       IdMarca,
@@ -181,23 +190,25 @@ export async function actualizarProducto(
       Descripcion,
       CantidadMinima,
       EsSerializado,
-    } = req.body;
+    } = body;
 
     if (!IdCategoria || !IdMarca || !Modelo || Modelo.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "La categoría, marca y modelo son obligatorios",
-      });
+      };
     }
 
     if (EsSerializado === undefined) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "Debe especificar si el producto es serializado o no",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -223,49 +234,51 @@ export async function actualizarProducto(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Producto no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Producto actualizado exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al actualizar producto");
+    console.error("Error al actualizar producto:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un producto con ese SKU",
-      });
+      };
     }
 
     if (error.number === 547) {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "La categoría o marca especificada no existe",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al actualizar el producto",
-    });
+    };
   }
 }
 
 // Eliminar un producto
-export async function eliminarProducto(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function eliminarProducto({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -273,29 +286,33 @@ export async function eliminarProducto(
       .query("DELETE FROM dbo.Productos WHERE IdProducto = @IdProducto");
 
     if (resultado.rowsAffected[0] === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Producto no encontrado",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Producto eliminado exitosamente",
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al eliminar producto");
+    console.error("Error al eliminar producto:", error);
 
     if (error.number === 547) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "No se puede eliminar el producto porque tiene stock o entregas asociadas",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al eliminar el producto",
-    });
+    };
   }
 }

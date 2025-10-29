@@ -1,6 +1,21 @@
 import sql, { ConnectionPool } from "mssql";
 import type { config as SQLConfig } from "mssql";
 
+// Contador global de queries
+let queryContador = 0;
+
+export function obtenerContador(): number {
+  return queryContador;
+}
+
+export function reiniciarContador(): void {
+  queryContador = 0;
+}
+
+export function aumentarContador(): void {
+  queryContador++;
+}
+
 // Opciones comunes para ambas conexiones
 const opciones: SQLConfig["options"] = {
   encrypt: false,
@@ -15,8 +30,8 @@ const configuracionDB = (database: string): SQLConfig => ({
   database,
   options: opciones,
   pool: {
-    max: 10,
-    min: 1,
+    max: 5,
+    min: 0,
     idleTimeoutMillis: 30000,
   },
 });
@@ -25,8 +40,35 @@ const configuracionDB = (database: string): SQLConfig => ({
 let poolSoporte: ConnectionPool | null = null;
 let poolSIGH: ConnectionPool | null = null;
 
+// Envolvedor para interceptar y contar queries
+function envolverPool(pool: ConnectionPool): ConnectionPool {
+  const requestOriginal = pool.request.bind(pool);
+
+  pool.request = function() {
+    const request = requestOriginal();
+    const queryOriginal = request.query.bind(request);
+    const executeOriginal = request.execute.bind(request);
+
+    // @ts-ignore - Necesario para envolver métodos dinámicos
+    request.query = function() {
+      aumentarContador();
+      return queryOriginal.apply(this, arguments as any);
+    };
+
+    // @ts-ignore - Necesario para envolver métodos dinámicos
+    request.execute = function() {
+      aumentarContador();
+      return executeOriginal.apply(this, arguments as any);
+    };
+
+    return request;
+  };
+
+  return pool;
+}
+
 // Inicializa el pool de conexión a la base de datos Soporte
-export const ConexionSoporte = async (fastify?: any): Promise<ConnectionPool> => {
+export const ConexionSoporte = async (): Promise<ConnectionPool> => {
   try {
     if (poolSoporte && poolSoporte.connected) return poolSoporte;
 
@@ -34,55 +76,55 @@ export const ConexionSoporte = async (fastify?: any): Promise<ConnectionPool> =>
     const pool = new sql.ConnectionPool(config);
 
     // Registrar eventos de estado
-    pool.on("connect", () => fastify?.log?.info("[DB Soporte] ✅ Conexión establecida"));
-    pool.on("error", (err) => fastify?.log?.error({ err }, "[DB Soporte] ❌ Error de conexión"));
+    pool.on("connect", () => console.log("[DB Soporte] ✅ Conexión establecida"));
+    pool.on("error", (err) => console.error("[DB Soporte] ❌ Error de conexión:", err));
 
     await pool.connect();
-    poolSoporte = pool;
-    fastify?.log?.info(`[DB] ✅ ${process.env.DB_NAME_1 || "Soporte"} iniciado correctamente`);
+    poolSoporte = envolverPool(pool);
+    console.log(`[DB] ✅ ${process.env.DB_NAME_1 || "Soporte"} iniciado correctamente`);
     return poolSoporte;
   } catch (error) {
-    fastify?.log?.error({ error }, "[DB Soporte] Error al iniciar el pool");
+    console.error("[DB Soporte] Error al iniciar el pool:", error);
     throw error;
   }
 };
 
 // Inicializa el pool de conexión a la base de datos SIGH
-export const ConexionSIGH = async (fastify?: any): Promise<ConnectionPool> => {
+export const ConexionSIGH = async (): Promise<ConnectionPool> => {
   try {
     if (poolSIGH && poolSIGH.connected) return poolSIGH;
 
     const config = configuracionDB(process.env.DB_NAME_2 || "SIGH");
     const pool = new sql.ConnectionPool(config);
 
-    pool.on("connect", () => fastify?.log?.info("[DB SIGH] ✅ Conexión establecida"));
-    pool.on("error", (err) => fastify?.log?.error({ err }, "[DB SIGH] ❌ Error de conexión"));
+    pool.on("connect", () => console.log("[DB SIGH] ✅ Conexión establecida"));
+    pool.on("error", (err) => console.error("[DB SIGH] ❌ Error de conexión:", err));
 
     await pool.connect();
-    poolSIGH = pool;
-    fastify?.log?.info(`[DB] ✅ ${process.env.DB_NAME_2 || "SIGH"} iniciado correctamente`);
+    poolSIGH = envolverPool(pool);
+    console.log(`[DB] ✅ ${process.env.DB_NAME_2 || "SIGH"} iniciado correctamente`);
     return poolSIGH;
   } catch (error) {
-    fastify?.log?.error({ error }, "[DB SIGH] Error al iniciar el pool");
+    console.error("[DB SIGH] Error al iniciar el pool:", error);
     throw error;
   }
 };
 
 // Cierra ambas conexiones (para apagar el servidor o reiniciar el pool)
-export const cerrarConexiones = async (fastify?: any): Promise<void> => {
+export const cerrarConexiones = async (): Promise<void> => {
   try {
     if (poolSoporte) {
       await poolSoporte.close();
       poolSoporte = null;
-      fastify?.log?.info("[DB Soporte] 🔒 Pool cerrado");
+      console.log("[DB Soporte] 🔒 Pool cerrado");
     }
     if (poolSIGH) {
       await poolSIGH.close();
       poolSIGH = null;
-      fastify?.log?.info("[DB SIGH] 🔒 Pool cerrado");
+      console.log("[DB SIGH] 🔒 Pool cerrado");
     }
   } catch (error) {
-    fastify?.log?.error({ error }, "[DB] Error al cerrar conexiones ❌");
+    console.error("[DB] Error al cerrar conexiones ❌:", error);
     throw error;
   }
 };

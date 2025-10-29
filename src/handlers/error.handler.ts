@@ -1,25 +1,31 @@
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
+import { renderVista } from "../utils/render";
 
-export function errorHandler(app: FastifyInstance) {
-  app.setErrorHandler(async (error, _request, reply) => {
-    app.log.error({ error }, "Error interno del servidor");
+export const errorHandler = (app: Elysia) => {
+  return app.onError(async ({ code, error, set, request }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
 
-    reply.status(error.statusCode || 500);
-    return (reply as any).view("pages/500", {
+    if (code === "NOT_FOUND") {
+      // Log simple para 404s (sin saturar la terminal)
+      const url = new URL(request.url);
+      console.log(`[404] Página no encontrada: ${url.pathname}`);
+
+      set.status = 404;
+      return renderVista("pages/404", {
+        title: "Página no encontrada",
+        usuario: null,
+      });
+    }
+
+    // Solo mostrar error completo para errores 500
+    console.error("Error del servidor:", error);
+
+    set.status = 500;
+    return renderVista("pages/500", {
       title: "Error del servidor",
       usuario: null,
-      error: error.message,
+      error: 'message' in error ? error.message : 'Unknown error',
       showDetails: process.env.NODE_ENV !== "production",
     });
   });
-}
-
-export function noEncontradoHandler(app: FastifyInstance) {
-  app.setNotFoundHandler(async (_request, reply) => {
-    reply.status(404);
-    return (reply as any).view("pages/404", {
-      title: "Página no encontrada",
-      usuario: null,
-    });
-  });
-}
+};

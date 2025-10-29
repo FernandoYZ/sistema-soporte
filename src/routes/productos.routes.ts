@@ -1,5 +1,5 @@
 // src/routes/productos.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarProductos,
   obtenerProducto,
@@ -7,19 +7,20 @@ import {
   actualizarProducto,
   eliminarProducto,
 } from "../controllers/productos.controller";
+import { renderVista } from "../utils/render";
 
-export async function productosRoutes(app: FastifyInstance) {
+export const productosRoutes = new Elysia()
   // API Routes
-  app.get("/api/productos", listarProductos);
-  app.get("/api/productos/:id", obtenerProducto);
-  app.post("/api/productos", crearProducto);
-  app.put("/api/productos/:id", actualizarProducto);
-  app.delete("/api/productos/:id", eliminarProducto);
+  .get("/api/productos", listarProductos)
+  .get("/api/productos/:id", obtenerProducto)
+  .post("/api/productos", crearProducto)
+  .put("/api/productos/:id", actualizarProducto)
+  .delete("/api/productos/:id", eliminarProducto)
 
   // View Routes
-  app.get("/productos", async (_req, reply) => {
-    return (reply as any).view("pages/productos", {
+  .get("/productos", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/productos", {
       title: "Gestión de Productos",
     });
   });
-}

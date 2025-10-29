@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { Elysia } from "elysia";
 import { vistasRutas } from "../routes/view.router";
 import { areasRoutes } from "../routes/areas.routes";
 import { categoriasRoutes } from "../routes/categorias.routes";
@@ -8,13 +8,14 @@ import { productosRoutes } from "../routes/productos.routes";
 import { stockRoutes } from "../routes/stock.routes";
 import { entregasRoutes } from "../routes/entregas.routes";
 
-export function configurarRutas(app: FastifyInstance) {
-    app.register(vistasRutas);
-    app.register(areasRoutes);
-    app.register(categoriasRoutes);
-    app.register(marcasRoutes);
-    app.register(usuariosRoutes);
-    app.register(productosRoutes);
-    app.register(stockRoutes);
-    app.register(entregasRoutes);
+export function configurarRutas(app: Elysia) {
+  return app
+    .use(vistasRutas)
+    .use(areasRoutes)
+    .use(categoriasRoutes)
+    .use(marcasRoutes)
+    .use(usuariosRoutes)
+    .use(productosRoutes)
+    .use(stockRoutes)
+    .use(entregasRoutes);
 }

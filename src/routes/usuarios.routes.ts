@@ -1,5 +1,5 @@
 // src/routes/usuarios.routes.ts
-import type { FastifyInstance } from "fastify";
+import { Elysia } from "elysia";
 import {
   listarUsuarios,
   obtenerUsuario,
@@ -7,19 +7,20 @@ import {
   actualizarUsuario,
   eliminarUsuario,
 } from "../controllers/usuarios.controller";
+import { renderVista } from "../utils/render";
 
-export async function usuariosRoutes(app: FastifyInstance) {
+export const usuariosRoutes = new Elysia()
   // API Routes
-  app.get("/api/usuarios", listarUsuarios);
-  app.get("/api/usuarios/:id", obtenerUsuario);
-  app.post("/api/usuarios", crearUsuario);
-  app.put("/api/usuarios/:id", actualizarUsuario);
-  app.delete("/api/usuarios/:id", eliminarUsuario);
+  .get("/api/usuarios", listarUsuarios)
+  .get("/api/usuarios/:id", obtenerUsuario)
+  .post("/api/usuarios", crearUsuario)
+  .put("/api/usuarios/:id", actualizarUsuario)
+  .delete("/api/usuarios/:id", eliminarUsuario)
 
   // View Routes
-  app.get("/usuarios", async (_req, reply) => {
-    return (reply as any).view("pages/usuarios", {
+  .get("/usuarios", async ({ set }) => {
+    set.headers["Content-Type"] = "text/html; charset=utf-8";
+    return renderVista("pages/usuarios", {
       title: "Gestión de Usuarios",
     });
   });
-}

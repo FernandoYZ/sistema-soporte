@@ -1,38 +1,36 @@
 // src/controllers/areas.controller.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
 import { ConexionSoporte } from "../config/database";
 import type { Area, CrearArea } from "../types/entidades.type";
 import sql from "mssql";
 
 // Listar todas las áreas
-export async function listarAreas(req: FastifyRequest, reply: FastifyReply) {
+export async function listarAreas({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query<Area>("SELECT * FROM dbo.Areas ORDER BY Nombre");
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar áreas");
-    return reply.status(500).send({
+    console.error("Error al listar áreas:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener las áreas",
-    });
+    };
   }
 }
 
 // Obtener un área por ID
-export async function obtenerArea(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function obtenerArea({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -40,42 +38,43 @@ export async function obtenerArea(
       .query<Area>("SELECT * FROM dbo.Areas WHERE IdArea = @IdArea");
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Área no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al obtener área");
-    return reply.status(500).send({
+    console.error("Error al obtener área:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener el área",
-    });
+    };
   }
 }
 
 // Crear un área nueva
-export async function crearArea(
-  req: FastifyRequest<{ Body: CrearArea }>,
-  reply: FastifyReply
-) {
+export async function crearArea({ body, set }: { body: CrearArea; set: any }) {
   try {
-    const { Nombre, Ubicacion, CentroCosto } = req.body;
+    const { Nombre, Ubicacion, CentroCosto } = body;
 
     // Validación básica
     if (!Nombre || Nombre.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El nombre del área es obligatorio",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -88,47 +87,56 @@ export async function crearArea(
          VALUES (@Nombre, @Ubicacion, @CentroCosto)`
       );
 
-    return reply.status(201).send({
+    set.status = 201;
+    return {
       exito: true,
       mensaje: "Área creada exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al crear área");
+    console.error("Error al crear área:", error);
 
     // Verificar si es error de duplicado (nombre único)
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un área con ese nombre",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al crear el área",
-    });
+    };
   }
 }
 
 // Actualizar un área existente
-export async function actualizarArea(
-  req: FastifyRequest<{ Params: { id: string }; Body: CrearArea }>,
-  reply: FastifyReply
-) {
+export async function actualizarArea({
+  params,
+  body,
+  set,
+}: {
+  params: { id: string };
+  body: CrearArea;
+  set: any;
+}) {
   try {
-    const { id } = req.params;
-    const { Nombre, Ubicacion, CentroCosto } = req.body;
+    const { id } = params;
+    const { Nombre, Ubicacion, CentroCosto } = body;
 
     // Validación básica
     if (!Nombre || Nombre.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El nombre del área es obligatorio",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -146,42 +154,43 @@ export async function actualizarArea(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Área no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Área actualizada exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al actualizar área");
+    console.error("Error al actualizar área:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe un área con ese nombre",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al actualizar el área",
-    });
+    };
   }
 }
 
 // Eliminar un área
-export async function eliminarArea(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function eliminarArea({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -189,30 +198,34 @@ export async function eliminarArea(
       .query("DELETE FROM dbo.Areas WHERE IdArea = @IdArea");
 
     if (resultado.rowsAffected[0] === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Área no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Área eliminada exitosamente",
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al eliminar área");
+    console.error("Error al eliminar área:", error);
 
     // Verificar si hay referencias en otras tablas (FK constraint)
     if (error.number === 547) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "No se puede eliminar el área porque está siendo utilizada en entregas",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al eliminar el área",
-    });
+    };
   }
 }

@@ -1,38 +1,36 @@
 // src/controllers/marcas.controller.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
 import { ConexionSoporte } from "../config/database";
 import type { Marca, CrearMarca } from "../types/entidades.type";
 import sql from "mssql";
 
 // Listar todas las marcas
-export async function listarMarcas(req: FastifyRequest, reply: FastifyReply) {
+export async function listarMarcas({ set }: { set: any }) {
   try {
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
     const resultado = await pool
       .request()
       .query<Marca>("SELECT * FROM dbo.Marcas ORDER BY Nombre");
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset,
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al listar marcas");
-    return reply.status(500).send({
+    console.error("Error al listar marcas:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener las marcas",
-    });
+    };
   }
 }
 
 // Obtener una marca por ID
-export async function obtenerMarca(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function obtenerMarca({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -40,41 +38,42 @@ export async function obtenerMarca(
       .query<Marca>("SELECT * FROM dbo.Marcas WHERE IdMarca = @IdMarca");
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Marca no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error) {
-    req.log.error({ error }, "Error al obtener marca");
-    return reply.status(500).send({
+    console.error("Error al obtener marca:", error);
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al obtener la marca",
-    });
+    };
   }
 }
 
 // Crear una marca nueva
-export async function crearMarca(
-  req: FastifyRequest<{ Body: CrearMarca }>,
-  reply: FastifyReply
-) {
+export async function crearMarca({ body, set }: { body: CrearMarca; set: any }) {
   try {
-    const { Nombre } = req.body;
+    const { Nombre } = body;
 
     if (!Nombre || Nombre.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El nombre de la marca es obligatorio",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -85,45 +84,54 @@ export async function crearMarca(
          VALUES (@Nombre)`
       );
 
-    return reply.status(201).send({
+    set.status = 201;
+    return {
       exito: true,
       mensaje: "Marca creada exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al crear marca");
+    console.error("Error al crear marca:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe una marca con ese nombre",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al crear la marca",
-    });
+    };
   }
 }
 
 // Actualizar una marca existente
-export async function actualizarMarca(
-  req: FastifyRequest<{ Params: { id: string }; Body: CrearMarca }>,
-  reply: FastifyReply
-) {
+export async function actualizarMarca({
+  params,
+  body,
+  set,
+}: {
+  params: { id: string };
+  body: CrearMarca;
+  set: any;
+}) {
   try {
-    const { id } = req.params;
-    const { Nombre } = req.body;
+    const { id } = params;
+    const { Nombre } = body;
 
     if (!Nombre || Nombre.trim() === "") {
-      return reply.status(400).send({
+      set.status = 400;
+      return {
         exito: false,
         mensaje: "El nombre de la marca es obligatorio",
-      });
+      };
     }
 
-    const pool = await ConexionSoporte(req.server);
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -137,42 +145,43 @@ export async function actualizarMarca(
       );
 
     if (resultado.recordset.length === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Marca no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Marca actualizada exitosamente",
       datos: resultado.recordset[0],
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al actualizar marca");
+    console.error("Error al actualizar marca:", error);
 
     if (error.number === 2627) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "Ya existe una marca con ese nombre",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al actualizar la marca",
-    });
+    };
   }
 }
 
 // Eliminar una marca
-export async function eliminarMarca(
-  req: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
-) {
+export async function eliminarMarca({ params, set }: { params: { id: string }; set: any }) {
   try {
-    const { id } = req.params;
-    const pool = await ConexionSoporte(req.server);
+    const { id } = params;
+    const pool = await ConexionSoporte();
 
     const resultado = await pool
       .request()
@@ -180,29 +189,33 @@ export async function eliminarMarca(
       .query("DELETE FROM dbo.Marcas WHERE IdMarca = @IdMarca");
 
     if (resultado.rowsAffected[0] === 0) {
-      return reply.status(404).send({
+      set.status = 404;
+      return {
         exito: false,
         mensaje: "Marca no encontrada",
-      });
+      };
     }
 
-    return reply.status(200).send({
+    set.status = 200;
+    return {
       exito: true,
       mensaje: "Marca eliminada exitosamente",
-    });
+    };
   } catch (error: any) {
-    req.log.error({ error }, "Error al eliminar marca");
+    console.error("Error al eliminar marca:", error);
 
     if (error.number === 547) {
-      return reply.status(409).send({
+      set.status = 409;
+      return {
         exito: false,
         mensaje: "No se puede eliminar la marca porque está siendo utilizada en productos",
-      });
+      };
     }
 
-    return reply.status(500).send({
+    set.status = 500;
+    return {
       exito: false,
       mensaje: "Error al eliminar la marca",
-    });
+    };
   }
 }
