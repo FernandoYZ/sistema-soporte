@@ -10,7 +10,7 @@ export async function listarUsuarios(req: FastifyRequest, reply: FastifyReply) {
     const pool = await ConexionSoporte(req.server);
     const resultado = await pool
       .request()
-      .query<Usuario>("SELECT * FROM dbo.Usuarios ORDER BY NombreCompleto");
+      .query<Usuario>("SELECT * FROM dbo.Usuarios ORDER BY Apellidos, Nombres");
 
     return reply.status(200).send({
       exito: true,
@@ -65,12 +65,12 @@ export async function crearUsuario(
   reply: FastifyReply
 ) {
   try {
-    const { IdEmpleado, NombreCompleto, EstaActivo } = req.body;
+    const { IdEmpleado, Nombres, Apellidos, EstaActivo } = req.body;
 
-    if (!IdEmpleado || !NombreCompleto || NombreCompleto.trim() === "") {
+    if (!IdEmpleado || !Nombres || Nombres.trim() === "" || !Apellidos || Apellidos.trim() === "") {
       return reply.status(400).send({
         exito: false,
-        mensaje: "El ID de empleado y nombre completo son obligatorios",
+        mensaje: "El ID de empleado, nombres y apellidos son obligatorios",
       });
     }
 
@@ -79,12 +79,13 @@ export async function crearUsuario(
     const resultado = await pool
       .request()
       .input("IdEmpleado", sql.Int, IdEmpleado)
-      .input("NombreCompleto", sql.VarChar(255), NombreCompleto.trim())
+      .input("Nombres", sql.VarChar(255), Nombres.trim())
+      .input("Apellidos", sql.VarChar(255), Apellidos.trim())
       .input("EstaActivo", sql.Bit, EstaActivo !== undefined ? EstaActivo : true)
       .query<Usuario>(
-        `INSERT INTO dbo.Usuarios (IdEmpleado, NombreCompleto, EstaActivo)
+        `INSERT INTO dbo.Usuarios (IdEmpleado, Nombres, Apellidos, EstaActivo)
          OUTPUT INSERTED.*
-         VALUES (@IdEmpleado, @NombreCompleto, @EstaActivo)`
+         VALUES (@IdEmpleado, @Nombres, @Apellidos, @EstaActivo)`
       );
 
     return reply.status(201).send({
@@ -109,12 +110,12 @@ export async function actualizarUsuario(
 ) {
   try {
     const { id } = req.params;
-    const { IdEmpleado, NombreCompleto, EstaActivo } = req.body;
+    const { IdEmpleado, Nombres, Apellidos, EstaActivo } = req.body;
 
-    if (!IdEmpleado || !NombreCompleto || NombreCompleto.trim() === "") {
+    if (!IdEmpleado || !Nombres || Nombres.trim() === "" || !Apellidos || Apellidos.trim() === "") {
       return reply.status(400).send({
         exito: false,
-        mensaje: "El ID de empleado y nombre completo son obligatorios",
+        mensaje: "El ID de empleado, nombres y apellidos son obligatorios",
       });
     }
 
@@ -124,12 +125,14 @@ export async function actualizarUsuario(
       .request()
       .input("IdUsuario", sql.Int, parseInt(id))
       .input("IdEmpleado", sql.Int, IdEmpleado)
-      .input("NombreCompleto", sql.VarChar(255), NombreCompleto.trim())
+      .input("Nombres", sql.VarChar(255), Nombres.trim())
+      .input("Apellidos", sql.VarChar(255), Apellidos.trim())
       .input("EstaActivo", sql.Bit, EstaActivo !== undefined ? EstaActivo : true)
       .query<Usuario>(
         `UPDATE dbo.Usuarios
          SET IdEmpleado = @IdEmpleado,
-             NombreCompleto = @NombreCompleto,
+             Nombres = @Nombres,
+             Apellidos = @Apellidos,
              EstaActivo = @EstaActivo
          OUTPUT INSERTED.*
          WHERE IdUsuario = @IdUsuario`

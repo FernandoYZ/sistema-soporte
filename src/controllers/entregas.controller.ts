@@ -18,7 +18,7 @@ export async function listarEntregas(req: FastifyRequest, reply: FastifyReply) {
       .query<EntregaConRelaciones>(
         `SELECT
           e.*,
-          u.NombreCompleto AS UsuarioNombre,
+          CONCAT(u.Nombres, ' ', u.Apellidos) AS UsuarioNombre,
           a.Nombre AS AreaNombre
          FROM dbo.Entregas e
          INNER JOIN dbo.Usuarios u ON e.IdUsuario = u.IdUsuario
@@ -55,7 +55,7 @@ export async function obtenerEntrega(
       .query<EntregaConRelaciones>(
         `SELECT
           e.*,
-          u.NombreCompleto AS UsuarioNombre,
+          CONCAT(u.Nombres, ' ', u.Apellidos) AS UsuarioNombre,
           a.Nombre AS AreaNombre
          FROM dbo.Entregas e
          INNER JOIN dbo.Usuarios u ON e.IdUsuario = u.IdUsuario
@@ -110,7 +110,7 @@ export async function crearEntrega(
   reply: FastifyReply
 ) {
   try {
-    const { IdUsuario, IdArea, Observacion, Detalles } = req.body;
+    const { IdUsuario, IdArea, Observacion, IdSoporte, Detalles } = req.body;
 
     // Validaciones
     if (!IdUsuario || !IdArea) {
@@ -139,11 +139,16 @@ export async function crearEntrega(
         .input("IdUsuario", sql.Int, IdUsuario)
         .input("IdArea", sql.Int, IdArea)
         .input("Observacion", sql.VarChar(1000), Observacion || null)
+        .input("IdSoporte", sql.BigInt, IdSoporte || null)
         .query<Entrega>(
-          `INSERT INTO dbo.Entregas (IdUsuario, IdArea, Observacion)
+          `INSERT INTO dbo.Entregas (IdUsuario, IdArea, Observacion, IdSoporte)
            OUTPUT INSERTED.*
-           VALUES (@IdUsuario, @IdArea, @Observacion)`
+           VALUES (@IdUsuario, @IdArea, @Observacion, @IdSoporte)`
         );
+
+      if (!entregaResult.recordset[0]) {
+        throw new Error("No se pudo crear la entrega");
+      }
 
       const idEntrega = entregaResult.recordset[0].IdEntrega;
 
