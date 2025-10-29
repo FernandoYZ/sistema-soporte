@@ -1,1 +1,286 @@
 @import "tailwindcss";
+
+/* ========== ONE UI 7/8 DARK THEME ========== */
+
+@theme {
+  /* Dark Background Colors */
+  --color-dark-bg: #0A0E1A;
+  --color-dark-surface: #12161F;
+  --color-dark-elevated: #1A1F2E;
+  --color-dark-hover: #252A3A;
+  --color-dark-border: #2A2F3E;
+  --color-dark-text: #E8EAED;
+  --color-dark-text-secondary: #9AA0A6;
+
+  /* Blue Accent (One UI Style) */
+  --color-blue-50: #E8F4FF;
+  --color-blue-100: #D1E8FF;
+  --color-blue-200: #A3D1FF;
+  --color-blue-300: #75BAFF;
+  --color-blue-400: #47A3FF;
+  --color-blue-500: #1A8CFF;
+  --color-blue-600: #0070E0;
+  --color-blue-700: #0054B3;
+  --color-blue-800: #003D85;
+  --color-blue-900: #002657;
+
+  /* Enhanced Border Radius */
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+
+  /* Dark Shadows */
+  --shadow-dark-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-dark-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-dark-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-dark-xl: 0 12px 48px rgba(0, 0, 0, 0.7);
+  --shadow-blue-glow: 0 0 20px rgba(26, 140, 255, 0.3);
+  --shadow-blue-glow-lg: 0 0 40px rgba(26, 140, 255, 0.4);
+
+  /* Animations */
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-scale-in: scaleIn 0.2s ease-out;
+}
+
+/* ========== KEYFRAMES ========== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+/* ========== GLOBAL STYLES ========== */
+body {
+  background: var(--color-dark-bg);
+  color: var(--color-dark-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "liga", "kern";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== CUSTOM UTILITIES ========== */
+
+/* Glass Morphism */
+.glass {
+  background: rgba(26, 31, 46, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-strong {
+  background: rgba(26, 31, 46, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gradient Borders */
+.border-gradient {
+  position: relative;
+  border: 0;
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(26, 140, 255, 0.5), rgba(26, 140, 255, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Blue Glow Button */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-glow:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-hover);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dark-border);
+}
+
+/* Card Shine Effect */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  bottom: -50%;
+  left: -50%;
+  background: linear-gradient(to bottom, transparent, rgba(26, 140, 255, 0.05), transparent);
+  transform: rotateZ(60deg) translate(-5em, 7.5em);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card-shine:hover::after {
+  opacity: 1;
+  animation: shimmer 2s infinite;
+}
+
+/* Tab active indicator */
+.tab-active {
+  position: relative;
+}
+
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-blue-500), var(--color-blue-400));
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 0 10px rgba(26, 140, 255, 0.5);
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-dark-elevated) 0%,
+    var(--color-dark-hover) 50%,
+    var(--color-dark-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  letter-spacing: 0.025em;
+}
+
+/* Input Focus Glow */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-blue-500);
+  box-shadow: 0 0 0 3px rgba(26, 140, 255, 0.1), 0 0 20px rgba(26, 140, 255, 0.2);
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-dark-lg);
+}
+
+/* Text gradient */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-blue-400), var(--color-blue-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Stats card gradient */
+.stats-card {
+  background: linear-gradient(135deg, var(--color-dark-elevated), var(--color-dark-surface));
+  border: 1px solid var(--color-dark-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-blue-500), var(--color-blue-400));
+}
