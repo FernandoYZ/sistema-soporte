@@ -12,7 +12,8 @@ export interface Area {
 export interface Usuario {
   IdUsuario: number;
   IdEmpleado: number;
-  NombreCompleto: string;
+  Nombres: string;
+  Apellidos: string;
   EstaActivo: boolean;
 }
 
@@ -76,6 +77,7 @@ export interface Entrega {
   IdArea: number;
   FechaEntrega: Date;
   Observacion: string | null;
+  IdSoporte: number | null; // Vínculo opcional con un ticket de soporte
 }
 
 export interface EntregaConRelaciones extends Entrega {
@@ -106,7 +108,8 @@ export interface CrearArea {
 
 export interface CrearUsuario {
   IdEmpleado: number;
-  NombreCompleto: string;
+  Nombres: string;
+  Apellidos: string;
   EstaActivo?: boolean;
 }
 
@@ -139,6 +142,7 @@ export interface CrearEntrega {
   IdUsuario: number;
   IdArea: number;
   Observacion?: string | null;
+  IdSoporte?: number | null; // Vínculo opcional con un ticket de soporte
   Detalles: CrearEntregaDetalle[];
 }
 
