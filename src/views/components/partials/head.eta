@@ -4,6 +4,13 @@
 <meta name="description" content="Sistema de Control de Reparaciones - Soporte Técnico">
 <title><%= it.title ? it.title + ' - ' : '' %>Control de Reparaciones</title>
 <link rel="stylesheet" href="/css/output.css">
+
+<!-- HTMX - Hypermedia para intercambio de HTML -->
+<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+
+<!-- Alpine.js - Interactividad reactiva -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" integrity="sha384-Xt/egzq24OeYYeG1fSqRwQfJ8UfcqUKZCYKNhxpNDQQYHYMJCgjQELM0K+oTqN5B" crossorigin="anonymous"></script>
+
 <% if (it.customStyles) { %>
   <%= it.customStyles %>
 <% } %>
