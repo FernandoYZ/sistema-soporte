@@ -1,6 +1,5 @@
 import { iniciarApp } from "./app";
 import { ConexionSoporte, ConexionSIGH, cerrarConexiones } from "./config/database";
-import { iniciarReporteMetricas } from "./middlewares/metrics.middleware";
 
 const HOST = process.env.HOST || "localhost";
 const PORT = parseInt(process.env.PORT || "3000", 10);
@@ -18,9 +17,6 @@ async function iniciarServidor() {
 
     // Iniciar aplicación
     const app = iniciarApp();
-
-    // Iniciar sistema de métricas
-    iniciarReporteMetricas();
 
     // Iniciar servidor
     app.listen({
