@@ -1,0 +1,41 @@
+<tbody id="tabla-stock" class="divide-y divide-dark-border">
+  <% if (it.stock.length === 0) { %>
+    <tr>
+      <td colspan="6" class="text-center py-12 text-dark-text-secondary">
+        No hay items en stock
+      </td>
+    </tr>
+  <% } else { %>
+    <% it.stock.forEach(item => { %>
+      <tr class="hover:bg-dark-hover transition-smooth">
+        <td class="px-6 py-4 text-sm font-semibold text-blue-400">
+          <%= item.Serie %>
+        </td>
+        <td class="px-6 py-4 text-sm text-dark-text">
+          <%= item.ProductoModelo || '-' %>
+        </td>
+        <td class="px-6 py-4 text-sm">
+          <%~ it.obtenerBadgeEstado(item.IdEstadoStock, item.EstadoNombre) %>
+        </td>
+        <td class="px-6 py-4 text-sm text-dark-text-secondary">
+          <%= item.UbicacionAlmacen || '-' %>
+        </td>
+        <td class="px-6 py-4 text-sm text-dark-text-secondary">
+          <%= it.formatearFecha(new Date(item.FechaIngreso)) %>
+        </td>
+        <td class="px-6 py-4 text-right text-sm">
+          <button hx-delete="/api/stock/items/<%= item.IdItem %>"
+                  hx-confirm="¿Estás seguro de eliminar este item?"
+                  hx-target="closest tr"
+                  hx-swap="outerHTML swap:300ms"
+                  class="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-smooth"
+                  title="Eliminar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } %>
+</tbody>
