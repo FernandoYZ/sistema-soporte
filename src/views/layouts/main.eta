@@ -4,6 +4,13 @@
   <%~ include("../components/partials/head", it) %>
 </head>
 <body class="min-h-screen">
+  <!-- Barra de progreso HTMX -->
+  <div class="htmx-progreso"></div>
+
+  <!-- Contenedor de notificaciones -->
+  <div id="notificaciones-container" class="notificaciones-container"></div>
+
+  <!-- Contenido principal -->
   <%~ it.body %>
 </body>
 </html>
