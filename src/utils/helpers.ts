@@ -49,3 +49,21 @@ export const sanitizarString = (str: string): string => {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;");
 };
+
+/**
+ * Obtiene el badge HTML de estado para stock
+ * @param idEstado ID del estado (1=En Almacén, 2=Entregado, etc)
+ * @param nombreEstado Nombre del estado
+ * @returns HTML del badge con clases Tailwind
+ */
+export const obtenerBadgeEstado = (idEstado: number, nombreEstado: string): string => {
+  const clases = {
+    1: 'bg-green-500/10 text-green-400 border-green-500/20', // En Almacén
+    2: 'bg-blue-500/10 text-blue-400 border-blue-500/20',     // Entregado
+    3: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20', // Mantenimiento
+    4: 'bg-red-500/10 text-red-400 border-red-500/20'         // Dado de Baja
+  };
+
+  const clase = clases[idEstado as keyof typeof clases] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+  return `<span class="badge border ${clase}">${nombreEstado || 'Desconocido'}</span>`;
+};
