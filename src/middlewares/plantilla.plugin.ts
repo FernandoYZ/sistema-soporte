@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Eta } from "eta";
 import { Elysia } from "elysia";
+import { formatearFecha, formatearFechaCorta, obtenerBadgeEstado } from "../utils/helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,10 @@ export const etaPlugin = new Elysia({ name: "eta" }).derive(({ set }) => ({
     const html = await eta.renderAsync(templatePath, {
       ...data,
       csrfToken: data.csrfToken || "",
+      // Helpers disponibles en todas las plantillas
+      formatearFecha,
+      formatearFechaCorta,
+      obtenerBadgeEstado,
     });
     set.headers["Content-Type"] = "text/html; charset=utf-8";
     return html;
