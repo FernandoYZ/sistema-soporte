@@ -1,4 +1,8 @@
-<div id="lista-categorias" class="space-y-2 max-h-96 overflow-y-auto">
+<div id="lista-categorias"
+     class="space-y-2 max-h-96 overflow-y-auto"
+     hx-get="/partials/categorias/lista"
+     hx-trigger="refresh-categorias from:body"
+     hx-swap="outerHTML swap:300ms">
   <% it.categorias.forEach(cat => { %>
     <div class="flex justify-between items-center p-3 hover:bg-dark-hover rounded-xl transition-smooth">
       <span class="text-sm text-dark-text font-medium"><%= cat.Nombre %></span>

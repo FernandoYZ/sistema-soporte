@@ -11,6 +11,9 @@
 <!-- Alpine.js - Interactividad reactiva -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" integrity="sha384-Xt/egzq24OeYYeG1fSqRwQfJ8UfcqUKZCYKNhxpNDQQYHYMJCgjQELM0K+oTqN5B" crossorigin="anonymous"></script>
 
+<!-- Gestor de Refresh - Sistema inteligente sin polling -->
+<script src="/js/refresh-manager.js"></script>
+
 <% if (it.customStyles) { %>
   <%= it.customStyles %>
 <% } %>

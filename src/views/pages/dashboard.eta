@@ -10,8 +10,12 @@
       <p class="text-dark-text-secondary text-lg">Gestión inteligente de toners y entregas</p>
     </div>
 
-    <!-- Cards de Estadísticas - Renderizadas con SSR -->
-    <div class="mb-8" hx-get="/partials/stats" hx-trigger="load, every 30s" hx-swap="innerHTML">
+    <!-- Cards de Estadísticas - SSR inicial, refresh reactivo -->
+    <div id="stats-cards"
+         class="mb-8"
+         hx-get="/partials/stats"
+         hx-trigger="refresh-stats from:body"
+         hx-swap="innerHTML swap:300ms">
       <%~ include("../partials/stats-cards", { stats: it.stats }) %>
     </div>
 

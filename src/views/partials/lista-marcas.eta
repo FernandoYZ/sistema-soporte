@@ -1,4 +1,8 @@
-<div id="lista-marcas" class="space-y-2 max-h-96 overflow-y-auto">
+<div id="lista-marcas"
+     class="space-y-2 max-h-96 overflow-y-auto"
+     hx-get="/partials/marcas/lista"
+     hx-trigger="refresh-marcas from:body"
+     hx-swap="outerHTML swap:300ms">
   <% it.marcas.forEach(marca => { %>
     <div class="flex justify-between items-center p-3 hover:bg-dark-hover rounded-xl transition-smooth">
       <span class="text-sm text-dark-text font-medium"><%= marca.Nombre %></span>

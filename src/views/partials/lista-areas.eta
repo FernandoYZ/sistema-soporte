@@ -1,4 +1,8 @@
-<div id="lista-areas" class="space-y-2 max-h-96 overflow-y-auto">
+<div id="lista-areas"
+     class="space-y-2 max-h-96 overflow-y-auto"
+     hx-get="/partials/areas/lista"
+     hx-trigger="refresh-areas from:body"
+     hx-swap="outerHTML swap:300ms">
   <% it.areas.forEach(area => { %>
     <div class="flex justify-between items-center p-3 hover:bg-dark-hover rounded-xl transition-smooth">
       <span class="text-sm text-dark-text font-medium"><%= area.Nombre %></span>
