@@ -1,0 +1,226 @@
+<% layout("../layouts/main") %>
+
+<div class="min-h-screen bg-dark-bg" x-data="{ tabActual: 'entregas' }">
+  <!-- Container Principal -->
+  <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+    <!-- Header con Título y Subtítulo -->
+    <div class="mb-8 animate-[fadeIn_0.5s_ease-out]">
+      <h1 class="text-4xl font-bold text-gradient mb-2">Sistema de Inventario</h1>
+      <p class="text-dark-text-secondary text-lg">Gestión inteligente de toners y entregas</p>
+    </div>
+
+    <!-- Cards de Estadísticas - Renderizadas con SSR -->
+    <div class="mb-8" hx-get="/partials/stats" hx-trigger="load, every 30s" hx-swap="innerHTML">
+      <%~ include("../partials/stats-cards", { stats: it.stats }) %>
+    </div>
+
+    <!-- Contenedor de Tabs y Contenido -->
+    <div class="glass-strong rounded-3xl overflow-hidden shadow-dark-lg animate-[slideUp_0.5s_ease-out]">
+
+      <!-- Tabs Navigation - Alpine.js para cambio de tabs -->
+      <div class="border-b border-dark-border bg-dark-surface/50">
+        <nav class="flex overflow-x-auto px-2" id="tabs-nav">
+          <button @click="tabActual = 'entregas'" :class="tabActual === 'entregas' ? 'tab-active text-blue-400' : 'text-dark-text-secondary'"
+            class="tab-button relative px-6 py-4 text-sm font-semibold transition-smooth whitespace-nowrap flex items-center gap-2 hover:text-dark-text">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span>Entregas</span>
+          </button>
+
+          <button @click="tabActual = 'stock'" :class="tabActual === 'stock' ? 'tab-active text-blue-400' : 'text-dark-text-secondary'"
+            class="tab-button relative px-6 py-4 text-sm font-semibold transition-smooth whitespace-nowrap flex items-center gap-2 hover:text-dark-text">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <span>Stock</span>
+          </button>
+
+          <button @click="tabActual = 'productos'" :class="tabActual === 'productos' ? 'tab-active text-blue-400' : 'text-dark-text-secondary'"
+            class="tab-button relative px-6 py-4 text-sm font-semibold transition-smooth whitespace-nowrap flex items-center gap-2 hover:text-dark-text">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span>Productos</span>
+          </button>
+
+          <button @click="tabActual = 'catalogos'" :class="tabActual === 'catalogos' ? 'tab-active text-blue-400' : 'text-dark-text-secondary'"
+            class="tab-button relative px-6 py-4 text-sm font-semibold transition-smooth whitespace-nowrap flex items-center gap-2 hover:text-dark-text">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+            <span>Catálogos</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+
+        <!-- Tab: Entregas -->
+        <div x-show="tabActual === 'entregas'" x-transition class="tab-content">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Registro de Entregas</h3>
+              <p class="text-sm text-dark-text-secondary">Gestiona las entregas de toners y materiales</p>
+            </div>
+            <button onclick="abrirModalEntrega()" class="btn-glow bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth shadow-blue-glow hover:shadow-blue-glow-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Nueva Entrega</span>
+            </button>
+          </div>
+
+          <!-- Tabla con HTMX - SSR inicial -->
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Fecha/Hora</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Serie</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Responsable</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Área</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Observación</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <%~ include("../partials/tabla-entregas", { entregas: it.entregas }) %>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Stock -->
+        <div x-show="tabActual === 'stock'" x-transition class="tab-content">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Inventario de Stock</h3>
+              <p class="text-sm text-dark-text-secondary">Items serializados en almacén</p>
+            </div>
+            <button onclick="abrirModalStock()" class="btn-glow bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Ingresar Item</span>
+            </button>
+          </div>
+
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Serie</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Ubicación</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Fecha Ingreso</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <%~ include("../partials/tabla-stock", { stock: it.stock }) %>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Productos -->
+        <div x-show="tabActual === 'productos'" x-transition class="tab-content">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="text-2xl font-bold text-dark-text mb-1">Catálogo de Productos</h3>
+              <p class="text-sm text-dark-text-secondary">Gestiona los productos del inventario</p>
+            </div>
+            <button onclick="abrirModalProducto()" class="btn-glow bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-2xl flex items-center gap-2 transition-smooth">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>Nuevo Producto</span>
+            </button>
+          </div>
+
+          <div class="bg-dark-elevated rounded-2xl border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-dark-surface">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Modelo</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Marca</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Categoría</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">SKU</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Tipo</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-dark-text-secondary uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <%~ include("../partials/tabla-productos", { productos: it.productos }) %>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Catálogos -->
+        <div x-show="tabActual === 'catalogos'" x-transition class="tab-content">
+          <h3 class="text-2xl font-bold text-dark-text mb-6">Gestión de Catálogos</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Áreas -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Áreas</h4>
+                <button onclick="abrirModalArea()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <%~ include("../partials/lista-areas", { areas: it.areas }) %>
+            </div>
+
+            <!-- Categorías -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Categorías</h4>
+                <button onclick="abrirModalCategoria()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <%~ include("../partials/lista-categorias", { categorias: it.categorias }) %>
+            </div>
+
+            <!-- Marcas -->
+            <div class="bg-dark-elevated rounded-2xl border border-dark-border p-5">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-lg text-dark-text">Marcas</h4>
+                <button onclick="abrirModalMarca()" class="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-smooth">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </button>
+              </div>
+              <%~ include("../partials/lista-marcas", { marcas: it.marcas }) %>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Incluir modales (aún necesitan refactorización para Alpine) -->
+<%~ include("../components/modales/modal-entrega") %>
+<%~ include("../components/modales/modal-stock") %>
+<%~ include("../components/modales/modal-producto") %>
+<%~ include("../components/modales/modal-catalogos") %>
+
+<!-- JavaScript mínimo para modales (temporal - se migrará a Alpine) -->
+<script src="/js/dashboard-helpers.js"></script>
